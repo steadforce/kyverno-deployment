@@ -1,0 +1,30 @@
+kyverno:
+  admissionController:
+    replicas: 1
+    initContainer:
+      resources: &localResources
+        limits:
+          cpu: 0m
+          memory: 0Mi
+        requests:
+          cpu: 0m
+          memory: 0Mi
+    container:
+      resources: *localResources
+  backgroundController:
+    replicas: 1
+    resources: *localResources
+  cleanupController:
+    resources: *localResources
+  features:
+    logging:
+      verbosity: "3"
+  reportsController:
+    replicas: 1
+    resources: *localResources
+  test:
+    resources: *localResources
+
+policies:
+  disallowLatestTag:
+    validationFailureAction: audit

@@ -1,0 +1,53 @@
+{{- if .Capabilities.APIVersions.Has "kyverno.io/v1" }}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Tag
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      The ':latest' tag is mutable and can lead to unexpected errors if the
+      image changes. A best practice is to use an immutable tag that maps to
+      a specific version of an application Pod. This policy validates that the image
+      specifies a tag and that it is not called `latest`.
+spec:
+  validationFailureAction: {{ .Values.policies.disallowLatestTag.validationFailureAction }}
+  background: true
+  rules:
+  - name: require-image-tag
+    match:
+      resources:
+        kinds:
+        - Pod
+    skipBackgroundRequests: true
+    validate:
+      message: "An image tag is required."
+      foreach:
+      # Create a flattened array of all containers in the Pod.
+      - list: "request.object.spec.[initContainers, ephemeralContainers, containers][]"
+        pattern:
+          # auto is replaced by the real image from istio injector we have to allow this
+          image: "*:*|auto"
+  - name: validate-image-tag
+    match:
+      resources:
+        kinds:
+        - Pod
+    skipBackgroundRequests: true
+    validate:
+      message: "Using a mutable image tag e.g. 'latest' is not allowed."
+      foreach:
+      # Create a flattened array of all containers in the Pod.
+      - list: "request.object.spec.[initContainers, ephemeralContainers, containers][]"
+        deny:
+          conditions:
+            all:
+            # Loop over every image and deny the Pod if any image doesn't match either the allowed registry in the
+            # cluster ConfigMap or the annotation on the Namespace where the Pod is created.
+            - key: "{{`{{element.image}}`}}"
+              operator: Equals
+              value: "*:latest"
+{{- end }}
