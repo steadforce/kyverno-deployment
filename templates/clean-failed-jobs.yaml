@@ -1,0 +1,19 @@
+apiVersion: kyverno.io/v2
+kind: ClusterCleanupPolicy
+metadata:
+  name: clean-old-failed-jobs
+spec:
+  match:
+    any:
+    - resources:
+        kinds:
+        - batch/*/Job
+  conditions:
+   all:
+   - key: {{`"{{ target.status.failed || `}}`0`{{` }}"`}}
+     operator: GreaterThan
+     value: 0
+   - key: Failed
+     operator: AnyIn
+     value: {{`"{{ target.status.conditions[].type || ['Complete'] }}"`}}
+  schedule: "*/5 * * * *"

@@ -21,7 +21,7 @@ for details.
 ## Render resource local
 
 ```
-  helm template -n argocd --release-name applications-root --include-crds --skip-tests \
+  helm template -n kyverno --release-name kyverno --include-crds --skip-tests \
   -a cert-manager.io/v1 \
   -a batch/v1/CronJob \
   -a kyverno.io/v1 \
