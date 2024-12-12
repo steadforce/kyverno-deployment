@@ -36,6 +36,12 @@ kyverno:
             - update
             - patch
             - delete
+        - apiGroups:
+            - acid.zalan.do
+          resources:
+            - postgresqls
+          verbs:
+            - list
     replicas: 3
     resources:
       limits:
