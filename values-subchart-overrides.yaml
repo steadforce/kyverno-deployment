@@ -1,4 +1,49 @@
 kyverno:
+  admissionController:
+    replicas: 3
+    container:
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 1024Mi
+        requests:
+          cpu: 500m
+          memory: 512Mi
+  backgroundController:
+    rbac:
+      clusterRole:
+        extraResources:
+        - apiGroups:
+            - ''
+          resources:
+            - secrets
+          # we're using generate policies to clone secrets, so we need to
+          # set these verbs according to https://main.kyverno.io/docs/installation/customization/#customizing-permissions
+          verbs:
+            - get
+            - create
+            - delete
+            - list
+            - update
+            - view
+            - watch
+        - apiGroups:
+            - cert-manager.io
+          resources:
+            - issuers
+          verbs:
+            - create
+            - update
+            - patch
+            - delete
+    replicas: 3
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 160Mi
+      requests:
+        cpu: 50m
+        memory: 80Mi
   cleanupController:
     rbac:
       clusterRole:
@@ -12,3 +57,10 @@ kyverno:
           - get
           - delete
           - list
+    resources:
+      limits:
+        cpu: 200m
+        memory: 96Mi
+      requests:
+        cpu: 20m
+        memory: 48Mi

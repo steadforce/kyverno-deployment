@@ -1,43 +1,4 @@
 kyverno:
-  admissionController:
-    replicas: 3
-    container:
-      resources:
-        limits:
-          cpu: 1000m
-          memory: 1024Mi
-        requests:
-          cpu: 500m
-          memory: 512Mi
-  backgroundController:
-    rbac:
-      clusterRole:
-        extraResources:
-        - apiGroups:
-            - cert-manager.io
-          resources:
-            - issuers
-          verbs:
-            - create
-            - update
-            - patch
-            - delete
-    replicas: 3
-    resources:
-      limits:
-        cpu: 1000m
-        memory: 160Mi
-      requests:
-        cpu: 50m
-        memory: 80Mi
-  cleanupController:
-    resources:
-      limits:
-        cpu: 200m
-        memory: 96Mi
-      requests:
-        cpu: 20m
-        memory: 48Mi
   crds:
     annotations:
       argocd.argoproj.io/sync-options: ServerSideApply=true
