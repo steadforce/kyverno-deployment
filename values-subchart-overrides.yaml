@@ -1,0 +1,14 @@
+kyverno:
+  cleanupController:
+    rbac:
+      clusterRole:
+        extraResources:
+        - apiGroups:
+          - batch
+          - extensions
+          resources:
+          - jobs
+          verbs:
+          - get
+          - delete
+          - list
