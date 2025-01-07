@@ -1,6 +1,5 @@
 kyverno:
   admissionController:
-    replicas: 3
     container:
       resources:
         limits:
@@ -9,6 +8,17 @@ kyverno:
         requests:
           cpu: 500m
           memory: 512Mi
+    rbac:
+      clusterRole:
+        extraResources:
+        - apiGroups:
+            - ''
+          resources:
+            - secrets
+          verbs:
+            - get
+            - list
+    replicas: 3
   backgroundController:
     rbac:
       clusterRole:
