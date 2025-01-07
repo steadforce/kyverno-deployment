@@ -6,15 +6,6 @@ kyverno:
     enableDefaultRegistryMutation: false
   networkPolicy:
     enabled: true
-  reportsController:
-    replicas: 3
-    resources:
-      limits:
-        cpu: 1000m
-        memory: 160Mi
-      requests:
-        cpu: 96m
-        memory: 80Mi
   # Disabled since Argo CD currently do not support pre-delete Helm hooks
   # See https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
   webhooksCleanup:

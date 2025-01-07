@@ -70,3 +70,12 @@ kyverno:
       requests:
         cpu: 20m
         memory: 48Mi
+  reportsController:
+    replicas: 3
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 256Mi
+      requests:
+        cpu: 96m
+        memory: 192Mi
