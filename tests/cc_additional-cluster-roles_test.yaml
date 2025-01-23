@@ -1,0 +1,58 @@
+suite: "test additional cluster roles for kyverno cleanup controller"
+release:
+  name: kyverno
+templates:
+- charts/kyverno/templates/cleanup-controller/clusterrole.yaml
+tests:
+- it: cleanup controller (all cluster types) - core clusterrole does not contain secret resource
+  values: &valuesSubchartOverrides
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - notExists: &secretRules
+      path: rules[*].resources[?(@ == 'secrets')]
+    documentSelector: &cleanupControllerCore
+      path: metadata.name
+      value: kyverno:cleanup-controller:core
+  - matchSnapshot: {}
+- it: cleanup controller (local clusters) - core clusterrole does not contain secret resource
+  values: &valuesFullClusters
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts:
+  - notExists: *secretRules
+    documentSelector: *cleanupControllerCore
+  - matchSnapshot: {}
+- it: cleanup controller (production clusters) - core clusterrole does not contain secret resource
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - notExists: *secretRules
+    documentSelector: *cleanupControllerCore
+  - matchSnapshot: {}
+- it: cleanup controller (local clusters ) - additional cluster role contains secret resource with list for all secrets
+  values: *valuesFullClusters
+  asserts:
+  - contains:
+      path: rules
+      content:
+        apiGroups:
+        - batch
+        - extensions
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - get
+        - list
+    documentSelector:
+      path: metadata.name
+      value: kyverno:cleanup-controller:additional
+  - matchSnapshot: {}
+- it: check for apiVersion change in ClusterRole for kyverno cleanup controller
+  values: *valuesSubchartOverrides
+  asserts:
+  - containsDocument:
+      kind: ClusterRole
+      apiVersion: rbac.authorization.k8s.io/v1
+  - matchSnapshot: {}

@@ -1,0 +1,61 @@
+suite: "test deployment for kyverno admission controller"
+release:
+  name: kyverno
+templates:
+- charts/kyverno/templates/admission-controller/deployment.yaml
+tests:
+- it: admission controller (local) - local container resources
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.memory
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.memory
+      pattern: "^0.*"
+  - matchSnapshot:
+      path: spec.template.spec
+- it: admission controller (all cluster types) - non-local container resources
+  values:
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.cpu
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.memory
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.cpu
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.memory
+      pattern: "^[1-9].*"
+  - matchSnapshot:
+      path: spec.template.spec
+- it: admission controller (all cluster types) - enabled policyExceptions feature
+  values:
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].args
+      content:
+        --enablePolicyException=true
+  - matchSnapshot:
+      path: spec.template.spec
+- it: admission controller (all cluster types) - subchart disabled policyExceptions feature
+  asserts:
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].args
+      content:
+        --enablePolicyException=false
+  - matchSnapshot:
+      path: spec.template.spec

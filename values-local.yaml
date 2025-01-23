@@ -5,7 +5,6 @@ kyverno:
       resources: &localResources
         limits:
           cpu: 0m
-          memory: 0Mi
         requests:
           cpu: 0m
           memory: 0Mi

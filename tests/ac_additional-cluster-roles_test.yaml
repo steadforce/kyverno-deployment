@@ -1,0 +1,84 @@
+suite: "test additional cluster roles for kyverno admission controller"
+release:
+  name: kyverno
+templates:
+- charts/kyverno/templates/admission-controller/clusterrole.yaml
+tests:
+- it: admission controller (all cluster types) - core clusterrole does not contain secret resource
+  values: &valuesSubchartOverrides
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - notExists: &secretRules
+      path: rules[*].resources[?(@ == 'secrets')]
+    documentSelector: &admissionControllerCore
+      path: metadata.name
+      value: kyverno:admission-controller:core
+  - matchSnapshot: {}
+- it: admission controller (local clusters) - core clusterrole does not contain secret resource
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts:
+  - notExists: *secretRules
+    documentSelector: *admissionControllerCore
+  - matchSnapshot: {}
+- it: admission controller (production clusters) - core clusterrole does not contain secret resource
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - notExists: *secretRules
+    documentSelector: *admissionControllerCore
+  - matchSnapshot: {}
+- it: admission controller (all cluster types) - additional cluster role contains secret, postgresql and istio sidecar resource
+  values: *valuesSubchartOverrides
+  asserts:
+  - equal:
+      path: rules
+      value:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - acid.zalan.do
+        resources:
+        - postgresqls
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - networking.istio.io
+        resources:
+        - sidecars
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - RoleBinding
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - security.istio.io
+        resources:
+        - peerauthentications
+        verbs:
+        - get
+        - list
+    documentSelector:
+      path: metadata.name
+      value: kyverno:admission-controller:additional
+  - matchSnapshot: {}
+- it: check for apiVersion change in ClusterRole for kyverno admission controller
+  values: *valuesSubchartOverrides
+  asserts:
+  - containsDocument:
+      kind: ClusterRole
+      apiVersion: rbac.authorization.k8s.io/v1
+  - matchSnapshot: {}

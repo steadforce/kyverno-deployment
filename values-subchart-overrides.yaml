@@ -8,35 +8,51 @@ kyverno:
         requests:
           cpu: 500m
           memory: 512Mi
-    rbac:
-      clusterRole:
-        extraResources:
-        - apiGroups:
-            - ''
-          resources:
-            - secrets
-          verbs:
-            - get
-            - list
+    priorityClassName: &systemClusterCritical system-cluster-critical
     replicas: 3
-  backgroundController:
     rbac:
       clusterRole:
         extraResources:
         - apiGroups:
-            - ''
+          - ''
           resources:
-            - secrets
-          # we're using generate policies to clone secrets, so we need to
-          # set these verbs according to https://main.kyverno.io/docs/installation/customization/#customizing-permissions
+          - secrets
           verbs:
-            - get
-            - create
-            - delete
-            - list
-            - update
-            - view
-            - watch
+          - get
+          - list
+        - apiGroups:
+          - acid.zalan.do
+          resources:
+          - postgresqls
+          verbs:
+          - get
+          - list
+        - apiGroups:
+          - networking.istio.io
+          resources:
+          - sidecars
+          verbs:
+          - get
+          - list
+        - apiGroups:
+          - rbac.authorization.k8s.io
+          resources:
+          - RoleBinding
+          verbs:
+          - get
+          - list
+        - apiGroups:
+          - security.istio.io
+          resources:
+          - peerauthentications
+          verbs:
+          - get
+          - list
+  backgroundController:
+    priorityClassName: *systemClusterCritical
+    rbac:
+      clusterRole:
+        extraResources:
         - apiGroups:
             - cert-manager.io
           resources:
@@ -47,11 +63,32 @@ kyverno:
             - patch
             - delete
         - apiGroups:
-            - acid.zalan.do
+          - networking.istio.io
           resources:
-            - postgresqls
+          - sidecars
           verbs:
-            - list
+          - create
+          - delete
+          - get
+          - list
+          - update
+        - apiGroups:
+          - acid.zalan.do
+          resources:
+          - postgresqls
+          verbs:
+          - get
+          - list
+        - apiGroups:
+          - security.istio.io
+          resources:
+          - peerauthentications
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
     replicas: 3
     resources:
       limits:
@@ -61,6 +98,7 @@ kyverno:
         cpu: 50m
         memory: 80Mi
   cleanupController:
+    priorityClassName: *systemClusterCritical
     rbac:
       clusterRole:
         extraResources:
@@ -70,8 +108,8 @@ kyverno:
           resources:
           - jobs
           verbs:
-          - get
           - delete
+          - get
           - list
     resources:
       limits:
@@ -80,6 +118,64 @@ kyverno:
       requests:
         cpu: 20m
         memory: 48Mi
+  cleanupJobs:
+    admissionReports:
+      resources:
+        limits:
+          cpu: 300m
+          memory: 24Mi
+        requests:
+          cpu: 10m
+          memory: 16Mi
+    clusterAdmissionReports:
+      resources:
+        limits:
+          cpu: 300m
+          memory: 24Mi
+        requests:
+          cpu: 10m
+          memory: 16Mi
+    clusterEphemeralReports:
+      resources:
+        limits:
+          cpu: 300m
+          memory: 24Mi
+        requests:
+          cpu: 10m
+          memory: 16Mi
+    ephemeralReports:
+      resources:
+        limits:
+          cpu: 300m
+          memory: 24Mi
+        requests:
+          cpu: 10m
+          memory: 16Mi
+    updateRequests:
+      resources:
+        limits:
+          cpu: 300m
+          memory: 24Mi
+        requests:
+          cpu: 10m
+          memory: 16Mi
+  config:
+    enableDefaultRegistryMutation: false
+  crds:
+    annotations:
+      argocd.argoproj.io/sync-options: ServerSideApply=true
+  features:
+    admissionReports:
+      # -- Enables the feature
+      enabled: false
+    logging:
+      format: json
+      verbosity: -1
+    policyExceptions:
+      enabled: true
+      namespace: "*"
+  networkPolicy:
+    enabled: true
   reportsController:
     replicas: 3
     resources:
@@ -89,3 +185,7 @@ kyverno:
       requests:
         cpu: 96m
         memory: 192Mi
+  # Disabled since Argo CD currently do not support pre-delete Helm hooks
+  # See https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
+  webhooksCleanup:
+    enabled: false

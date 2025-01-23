@@ -1,0 +1,89 @@
+suite: "test additional cluster roles for kyverno background controller"
+release:
+  name: kyverno
+templates:
+- charts/kyverno/templates/background-controller/clusterrole.yaml
+tests:
+- it: background controller (all cluster types) - core clusterrole does not contain secret resource
+  values: &valuesSubchartOverrides
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - notExists: &secretRules
+      path: rules[*].resources[?(@ == 'secrets')]
+    documentSelector: &backgroundControllerCore
+      path: metadata.name
+      value: kyverno:background-controller:core
+  - matchSnapshot: {}
+- it: background controller (local clusters) - core clusterrole does not contain secret resource
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts:
+  - notContains:
+      path: rules
+      content: *secretRules
+    documentSelector: *backgroundControllerCore
+  - matchSnapshot: {}
+- it: background controller (production clusters) - core clusterrole does not contain secret resource
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - notContains:
+      path: rules
+      content: *secretRules
+    documentSelector: *backgroundControllerCore
+  - matchSnapshot: {}
+- it: background controller (full clusters ) - additional cluster role contains secret, msd and Sidecar resource
+  values: *valuesSubchartOverrides
+  asserts:
+  - equal:
+      path: rules
+      value:
+        - apiGroups:
+            - cert-manager.io
+          resources:
+            - issuers
+          verbs:
+            - create
+            - update
+            - patch
+            - delete
+        - apiGroups:
+            - networking.istio.io
+          resources:
+            - sidecars
+          verbs:
+            - create
+            - delete
+            - get
+            - list
+            - update
+        - apiGroups:
+            - acid.zalan.do
+          resources:
+            - postgresqls
+          verbs:
+            - get
+            - list
+        - apiGroups:
+            - security.istio.io
+          resources:
+            - peerauthentications
+          verbs:
+            - create
+            - delete
+            - get
+            - list
+            - update
+    documentSelector:
+      path: metadata.name
+      value: kyverno:background-controller:additional
+  - matchSnapshot: {}
+- it: check for apiVersion change in ClusterRole for kyverno background controller
+  values: *valuesSubchartOverrides
+  asserts:
+  - containsDocument:
+      kind: ClusterRole
+      apiVersion: rbac.authorization.k8s.io/v1
+  - matchSnapshot: {}

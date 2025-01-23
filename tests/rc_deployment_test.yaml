@@ -1,0 +1,61 @@
+suite: "test deployment for kyverno reports controller"
+release:
+  name: kyverno
+templates:
+- charts/kyverno/templates/reports-controller/deployment.yaml
+tests:
+- it: reports controller (local clusters) - local container resources
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].resources.limits.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].resources.limits.memory
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].resources.requests.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].resources.requests.memory
+      pattern: "^0.*"
+  - matchSnapshot:
+      path: spec.template.spec
+- it: reports controller (all clusters) - non-local container resources
+  values:
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].resources.limits.cpu
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].resources.limits.memory
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].resources.requests.cpu
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].resources.requests.memory
+      pattern: "^[1-9].*"
+  - matchSnapshot:
+      path: spec.template.spec
+- it: reports controller (all clusters) - enabled policyExceptions feature
+  values:
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --enablePolicyException=true
+  - matchSnapshot:
+      path: spec.template.spec
+- it: reports controller (all clusters) - subchart disabled policyExceptions feature
+  asserts:
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --enablePolicyException=false
+  - matchSnapshot:
+      path: spec.template.spec

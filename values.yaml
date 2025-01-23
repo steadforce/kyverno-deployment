@@ -1,16 +1,5 @@
-kyverno:
-  crds:
-    annotations:
-      argocd.argoproj.io/sync-options: ServerSideApply=true
-  config:
-    enableDefaultRegistryMutation: false
-  networkPolicy:
-    enabled: true
-  # Disabled since Argo CD currently do not support pre-delete Helm hooks
-  # See https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
-  webhooksCleanup:
-    enabled: false
-
 policies:
   disallowLatestTag:
     validationFailureAction: enforce
+  requireRequestsAndLimits:
+    validationFailureAction: audit
