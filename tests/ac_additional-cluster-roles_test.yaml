@@ -60,7 +60,7 @@ tests:
       - apiGroups:
         - rbac.authorization.k8s.io
         resources:
-        - RoleBinding
+        - rolebindings
         verbs:
         - get
         - list

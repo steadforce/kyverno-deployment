@@ -40,42 +40,52 @@ tests:
   - equal:
       path: rules
       value:
-        - apiGroups:
-            - cert-manager.io
-          resources:
-            - issuers
-          verbs:
-            - create
-            - update
-            - patch
-            - delete
-        - apiGroups:
-            - networking.istio.io
-          resources:
-            - sidecars
-          verbs:
-            - create
-            - delete
-            - get
-            - list
-            - update
-        - apiGroups:
-            - acid.zalan.do
-          resources:
-            - postgresqls
-          verbs:
-            - get
-            - list
-        - apiGroups:
-            - security.istio.io
-          resources:
-            - peerauthentications
-          verbs:
-            - create
-            - delete
-            - get
-            - list
-            - update
+      - apiGroups:
+          - acid.zalan.do
+        resources:
+          - postgresqls
+        verbs:
+          - get
+          - list
+      - apiGroups:
+          - cert-manager.io
+        resources:
+          - issuers
+        verbs:
+          - create
+          - update
+          - patch
+          - delete
+      - apiGroups:
+          - networking.istio.io
+        resources:
+          - sidecars
+        verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - rolebindings
+        verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+      - apiGroups:
+          - security.istio.io
+        resources:
+          - peerauthentications
+        verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
     documentSelector:
       path: metadata.name
       value: kyverno:background-controller:additional

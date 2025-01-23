@@ -54,6 +54,13 @@ kyverno:
       clusterRole:
         extraResources:
         - apiGroups:
+          - acid.zalan.do
+          resources:
+          - postgresqls
+          verbs:
+          - get
+          - list
+        - apiGroups:
             - cert-manager.io
           resources:
             - issuers
@@ -73,12 +80,15 @@ kyverno:
           - list
           - update
         - apiGroups:
-          - acid.zalan.do
+          - rbac.authorization.k8s.io
           resources:
-          - postgresqls
+          - rolebindings
           verbs:
+          - create
+          - delete
           - get
           - list
+          - update
         - apiGroups:
           - security.istio.io
           resources:
