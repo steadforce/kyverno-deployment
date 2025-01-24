@@ -41,6 +41,16 @@ tests:
       path: rules
       value:
       - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - create
+        - delete
+        - get
+        - list
+        - update
+      - apiGroups:
           - acid.zalan.do
         resources:
           - postgresqls

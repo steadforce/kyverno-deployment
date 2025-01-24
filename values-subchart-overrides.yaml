@@ -54,6 +54,18 @@ kyverno:
       clusterRole:
         extraResources:
         - apiGroups:
+          - ''
+          resources:
+          - secrets
+          # we're using generate policies to clone secrets, so we need to
+          # set these verbs according to https://main.kyverno.io/docs/installation/customization/#customizing-permissions
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - update
+        - apiGroups:
           - acid.zalan.do
           resources:
           - postgresqls
