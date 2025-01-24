@@ -77,10 +77,11 @@ kyverno:
           resources:
             - issuers
           verbs:
-            - create
-            - update
-            - patch
-            - delete
+          - create
+          - delete
+          - get
+          - list
+          - update
         - apiGroups:
           - networking.istio.io
           resources:

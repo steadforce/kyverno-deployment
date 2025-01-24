@@ -63,9 +63,10 @@ tests:
           - issuers
         verbs:
           - create
-          - update
-          - patch
           - delete
+          - get
+          - list
+          - update
       - apiGroups:
           - networking.istio.io
         resources:
