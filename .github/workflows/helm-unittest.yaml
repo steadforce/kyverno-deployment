@@ -20,7 +20,7 @@ jobs:
       - run: helm unittest -t JUnit -o test-output.xml . 
       - run: helm lint .
       - name: Helm validation and helmunit tests succeeded
-        if: "success() && contains( github.ref, 'renovate/' ) && ${{ !env.ACT }}"
+        if: ${{ success() && contains( github.ref, 'renovate/' ) && !env.ACT }}
         uses: jdcargile/ms-teams-notification@v1.4
         with:
           github-token: ${{ github.token }}
@@ -29,7 +29,7 @@ jobs:
           notification-color: 28a745
           timezone: Europe/Berlin
       - name: Helm validation or helmunit tests failed
-        if: "!success() && contains( github.ref, 'renovate/' ) && ${{ !env.ACT }}"
+        if: ${{ failure() && contains( github.ref, 'renovate/' ) && !env.ACT }}
         uses: jdcargile/ms-teams-notification@v1.4
         with:
           github-token: ${{ github.token }}
