@@ -43,11 +43,18 @@ Or with output in JUnit format:
 ## Render resource local
 
 ```
-  helm template -n kyverno --release-name kyverno --include-crds --skip-tests \
+  helm template \
+  --include-crds \
+  --output-dir _local/local \
+  --release-name kyverno \
+  --skip-tests \
   -a cert-manager.io/v1 \
   -a batch/v1/CronJob \
   -a kyverno.io/v1 \
-  -f values-local.yaml --output-dir _local .
+  -f values-subchart-overrides.yaml \
+  -f values-local.yaml \
+  -n kyverno \
+  .
 ```
 
 ## Run act pipeline locally
