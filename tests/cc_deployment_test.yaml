@@ -5,7 +5,7 @@ templates:
 - charts/kyverno/templates/cleanup-controller/deployment.yaml
 tests:
 - it: cleanup controller (local clusters) - local container resources
-  values:
+  values: &localValues
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
   asserts:
@@ -24,7 +24,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: cleanup controller (all clusters) - non-local container resources
-  values:
+  values: &overridesValues
   - ../values-subchart-overrides.yaml
   asserts:
   - matchRegex:
@@ -42,8 +42,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: cleanup controller (all clusters) - ensure policyException feature is not present
-  values:
-  - ../values-subchart-overrides.yaml
+  values: *overridesValues
   asserts:
   - notExists:
       path: spec.template.spec.containers[*].args[?(@ == '--enablePolicyException=true')]
@@ -55,3 +54,55 @@ tests:
       path: spec.template.spec.containers[*].args[?(@ == '--enablePolicyException=false')]
   - matchSnapshot:
       path: spec.template.spec
+- it: cleanup controller local cluster - logging custom verbosity
+  values: *localValues
+  asserts:
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --v=3
+  - matchSnapshot:
+      path: spec.template.spec
+- it: cleanup controller development cluster - logging custom verbosity
+  values: *overridesValues
+  asserts: &assertLoggingCustomVerbosity
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --v=-1
+  - matchSnapshot:
+      path: spec.template.spec
+- it: cleanup controller production cluster - logging custom verbosity
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts: *assertLoggingCustomVerbosity
+- it: cleanup controller - logging default verbosity
+  asserts:
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --v=2
+  - matchSnapshot:
+      path: spec.template.spec
+- it: cleanup controller - logging default text format
+  asserts: &assertLoggingTextFormat
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --loggingFormat=text
+  - matchSnapshot:
+      path: spec.template.spec
+- it: cleanup controller local cluster - logging text format
+  values: *localValues
+  asserts: *assertLoggingTextFormat
+- it: cleanup controller development cluster - logging text format
+  values: *overridesValues
+  asserts: *assertLoggingTextFormat
+- it: cleanup controller production cluster - logging text format
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts: *assertLoggingCustomVerbosity
+- it: cleanup controller - logging default verbosity
+  asserts: *assertLoggingTextFormat

@@ -5,7 +5,7 @@ templates:
 - charts/kyverno/templates/reports-controller/deployment.yaml
 tests:
 - it: reports controller (local clusters) - local container resources
-  values:
+  values: &localValues
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
   asserts:
@@ -24,7 +24,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: reports controller (all clusters) - non-local container resources
-  values:
+  values: &overridesValues
   - ../values-subchart-overrides.yaml
   asserts:
   - matchRegex:
@@ -42,8 +42,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: reports controller (all clusters) - enabled policyExceptions feature
-  values:
-  - ../values-subchart-overrides.yaml
+  values: *overridesValues
   asserts:
   - contains:
       path: spec.template.spec.containers[?(@.name == "controller")].args
@@ -59,3 +58,55 @@ tests:
         --enablePolicyException=false
   - matchSnapshot:
       path: spec.template.spec
+- it: reports controller local cluster - logging custom verbosity
+  values: *localValues
+  asserts:
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --v=3
+  - matchSnapshot:
+      path: spec.template.spec
+- it: reports controller development cluster - logging custom verbosity
+  values: *overridesValues
+  asserts: &assertLoggingCustomVerbosity
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --v=-1
+  - matchSnapshot:
+      path: spec.template.spec
+- it: reports controller production cluster - logging custom verbosity
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts: *assertLoggingCustomVerbosity
+- it: reports controller - logging default verbosity
+  asserts:
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --v=2
+  - matchSnapshot:
+      path: spec.template.spec
+- it: reports controller - logging default text format
+  asserts: &assertLoggingTextFormat
+  - contains:
+      path: spec.template.spec.containers[?(@.name == "controller")].args
+      content:
+        --loggingFormat=text
+  - matchSnapshot:
+      path: spec.template.spec
+- it: reports controller local cluster - logging text format
+  values: *localValues
+  asserts: *assertLoggingTextFormat
+- it: reports controller development cluster - logging text format
+  values: *overridesValues
+  asserts: *assertLoggingTextFormat
+- it: reports controller production cluster - logging text format
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts: *assertLoggingCustomVerbosity
+- it: reports controller - logging default verbosity
+  asserts: *assertLoggingTextFormat
