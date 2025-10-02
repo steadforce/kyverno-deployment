@@ -219,4 +219,4 @@ kyverno:
     image:
       registry: registry.opensuse.org
       repository: opensuse/kubectl
-      tag: 1.30
+      tag: "1.30"
