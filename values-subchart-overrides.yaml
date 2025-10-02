@@ -211,6 +211,7 @@ kyverno:
     image:
       registry: registry.k8s.io
       repository: kubectl
+      tag: v1.30.2
   # Disabled since Argo CD currently do not support pre-delete Helm hooks
   # See https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
   webhooksCleanup:
@@ -218,3 +219,5 @@ kyverno:
     image:
       registry: registry.k8s.io
       repository: kubectl
+      tag: v1.30.2
+
