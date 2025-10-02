@@ -207,7 +207,12 @@ kyverno:
       requests:
         cpu: 96m
         memory: 192Mi
+  policyReportsCleanup:
+    image:
+      repository: &bitnamiRepo bitnamilegacy/kubectl
   # Disabled since Argo CD currently do not support pre-delete Helm hooks
   # See https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
   webhooksCleanup:
     enabled: false
+    image:
+      repository: *bitnamiRepo
