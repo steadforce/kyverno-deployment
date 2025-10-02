@@ -103,6 +103,6 @@ tests:
   values:
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
-  asserts: *assertLoggingCustomVerbosity
+  asserts: *assertLoggingTextFormat
 - it: cleanup controller - logging default verbosity
   asserts: *assertLoggingTextFormat
