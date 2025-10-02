@@ -5,7 +5,7 @@ templates:
 - charts/kyverno/templates/admission-controller/deployment.yaml
 tests:
 - it: admission controller (local) - local container resources
-  values:
+  values: &localValues
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
   asserts:
@@ -24,7 +24,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: admission controller (all cluster types) - non-local container resources
-  values:
+  values: &overridesValues
   - ../values-subchart-overrides.yaml
   asserts:
   - matchRegex:
@@ -42,11 +42,10 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: admission controller (all cluster types) - enabled policyExceptions feature
-  values:
-  - ../values-subchart-overrides.yaml
+  values: *overridesValues
   asserts:
   - contains:
-      path: spec.template.spec.containers[?(@.name == "kyverno")].args
+      path: &kyvernoContainerArgsPath spec.template.spec.containers[?(@.name == "kyverno")].args
       content:
         --enablePolicyException=true
   - matchSnapshot:
@@ -54,8 +53,74 @@ tests:
 - it: admission controller (all cluster types) - subchart disabled policyExceptions feature
   asserts:
   - contains:
-      path: spec.template.spec.containers[?(@.name == "kyverno")].args
+      path: *kyvernoContainerArgsPath
       content:
         --enablePolicyException=false
   - matchSnapshot:
       path: spec.template.spec
+- it: admission controller local cluster - logging custom verbosity
+  values: *localValues
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content:
+        --v=3
+  - contains:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].args
+      content:
+        --v=3
+  - matchSnapshot:
+      path: spec.template.spec
+- it: admission controller development cluster - logging custom verbosity
+  values: *overridesValues
+  asserts: &assertLoggingCustomVerbosity
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content:
+        --v=-1
+  - contains:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].args
+      content:
+        --v=-1
+  - matchSnapshot:
+      path: spec.template.spec
+- it: admission controller production cluster - logging custom verbosity
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts: *assertLoggingCustomVerbosity
+- it: admission controller - logging default verbosity
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content:
+        --v=2
+  - contains:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].args
+      content:
+        --v=2
+  - matchSnapshot:
+      path: spec.template.spec
+- it: admission controller - logging default text format
+  asserts: &assertLoggingTextFormat
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content:
+        --loggingFormat=text
+  - contains:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].args
+      content:
+        --loggingFormat=text
+  - matchSnapshot:
+      path: spec.template.spec
+- it: admission controller local cluster - logging text format
+  values: *localValues
+  asserts: *assertLoggingTextFormat
+- it: admission controller development cluster - logging text format
+  values: *overridesValues
+  asserts: *assertLoggingTextFormat
+- it: admission controller production cluster - logging text format
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts: *assertLoggingTextFormat

@@ -192,7 +192,6 @@ kyverno:
       # -- Enables the feature
       enabled: false
     logging:
-      format: json
       verbosity: -1
     policyExceptions:
       enabled: true
