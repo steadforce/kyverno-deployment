@@ -211,7 +211,7 @@ kyverno:
     image:
       registry: registry.opensuse.org
       repository: opensuse/kubectl
-      tag: 1.30
+      tag: &kubectlTag "1.30"
   # Disabled since Argo CD currently do not support pre-delete Helm hooks
   # See https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
   webhooksCleanup:
@@ -219,4 +219,4 @@ kyverno:
     image:
       registry: registry.opensuse.org
       repository: opensuse/kubectl
-      tag: "1.30"
+      tag: *kubectlTag
