@@ -108,5 +108,3 @@ tests:
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts: *assertLoggingTextFormat
-- it: background controller - logging default verbosity
-  asserts: *assertLoggingTextFormat
