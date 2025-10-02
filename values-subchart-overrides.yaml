@@ -209,15 +209,14 @@ kyverno:
         memory: 192Mi
   policyReportsCleanup:
     image:
-      registry: registry.k8s.io
-      repository: kubectl
-      tag: v1.30.2
+      registry: registry.opensuse.org
+      repository: opensuse/kubectl
+      tag: 1.30
   # Disabled since Argo CD currently do not support pre-delete Helm hooks
   # See https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
   webhooksCleanup:
     enabled: false
     image:
-      registry: registry.k8s.io
-      repository: kubectl
-      tag: v1.30.2
-
+      registry: registry.opensuse.org
+      repository: opensuse/kubectl
+      tag: 1.30
