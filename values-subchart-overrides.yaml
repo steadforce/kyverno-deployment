@@ -215,3 +215,6 @@ kyverno:
   # See https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-hooks
   webhooksCleanup:
     enabled: false
+    image:
+      registry: registry.k8s.io
+      repository: kubectl
