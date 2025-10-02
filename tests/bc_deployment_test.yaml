@@ -45,7 +45,7 @@ tests:
   values: *overridesValues
   asserts:
   - contains:
-      path: spec.template.spec.containers[?(@.name == "controller")].args
+      path: &kyvernoContainerArgsPath spec.template.spec.containers[?(@.name == "controller")].args
       content:
         --enablePolicyException=true
   - matchSnapshot:
@@ -53,7 +53,7 @@ tests:
 - it: background controller (all cluster types) - subchart disabled policyExceptions feature
   asserts:
   - contains:
-      path: spec.template.spec.containers[?(@.name == "controller")].args
+      path: *kyvernoContainerArgsPath
       content:
         --enablePolicyException=false
   - matchSnapshot:
@@ -62,7 +62,7 @@ tests:
   values: *localValues
   asserts:
   - contains:
-      path: spec.template.spec.containers[?(@.name == "controller")].args
+      path: *kyvernoContainerArgsPath
       content:
         --v=3
   - matchSnapshot:
@@ -71,7 +71,7 @@ tests:
   values: *overridesValues
   asserts: &assertLoggingCustomVerbosity
   - contains:
-      path: spec.template.spec.containers[?(@.name == "controller")].args
+      path: *kyvernoContainerArgsPath
       content:
         --v=-1
   - matchSnapshot:
@@ -84,7 +84,7 @@ tests:
 - it: background controller - logging default verbosity
   asserts:
   - contains:
-      path: spec.template.spec.containers[?(@.name == "controller")].args
+      path: *kyvernoContainerArgsPath
       content:
         --v=2
   - matchSnapshot:
@@ -92,7 +92,7 @@ tests:
 - it: background controller - logging default text format
   asserts: &assertLoggingTextFormat
   - contains:
-      path: spec.template.spec.containers[?(@.name == "controller")].args
+      path: *kyvernoContainerArgsPath
       content:
         --loggingFormat=text
   - matchSnapshot:
