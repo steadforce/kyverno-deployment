@@ -40,21 +40,21 @@ Or with output in JUnit format:
  docker run --pull=always -ti --rm -v "$(pwd):/apps" -u $(id -u) helmunittest/helm-unittest -o test-output.xml .
 ```
 
-## Render resource local
+## Render all manifests locally
 
-```
-  helm template \
-  --include-crds \
-  --output-dir _local/local \
-  --release-name kyverno \
-  --skip-tests \
-  -a cert-manager.io/v1 \
-  -a batch/v1/CronJob \
-  -a kyverno.io/v1 \
-  -f values-subchart-overrides.yaml \
-  -f values-local.yaml \
-  -n kyverno \
-  .
+```shell
+ helm dependency update && \
+ for cluster in $(yq '.environments | keys[]' helm-config.yaml); do
+    helm template \
+      -a "$(cluster=$cluster yq '.environments.[env(cluster)].apis | @csv' helm-config.yaml)" \
+      -f "$(cluster=$cluster yq '.environments.[env(cluster)].valueFiles | @csv' helm-config.yaml)" \
+      -n $(yq 'explode(.) | .namespace // ""' helm-config.yaml) \
+      --output-dir _local/$cluster \
+      --include-crds \
+      --release-name $(yq 'explode(.) | .releaseName // ""' helm-config.yaml) \
+      --skip-tests \
+      .
+ done
 ```
 
 ## Run act pipeline locally
