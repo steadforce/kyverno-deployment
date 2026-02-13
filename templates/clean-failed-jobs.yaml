@@ -1,3 +1,4 @@
+{{- if .Capabilities.APIVersions.Has "kyverno.io/v2" }}
 apiVersion: kyverno.io/v2
 kind: ClusterCleanupPolicy
 metadata:
@@ -17,3 +18,4 @@ spec:
      operator: AnyIn
      value: {{`"{{ target.status.conditions[].type || ['Complete'] }}"`}}
   schedule: "*/5 * * * *"
+{{- end }}
