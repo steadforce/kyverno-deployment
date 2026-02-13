@@ -1,5 +1,0 @@
-policies:
-  disallowLatestTag:
-    validationFailureAction: enforce
-  requireRequestsAndLimits:
-    validationFailureAction: audit

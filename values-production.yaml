@@ -1,3 +1,0 @@
-policies:
-  disallowLatestTag:
-    validationFailureAction: audit
