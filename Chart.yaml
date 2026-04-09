@@ -1,7 +1,7 @@
 apiVersion: v2
-name: kyverno
+name: &name kyverno
 version: 1.0.0
 dependencies:
-- name: kyverno
+- name: *name
   version: 3.3.7
   repository: https://kyverno.github.io/kyverno/
