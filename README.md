@@ -40,21 +40,21 @@ Or with output in JUnit format:
  docker run --pull=always -ti --rm -v "$(pwd):/apps" -u $(id -u) helmunittest/helm-unittest -o test-output.xml .
 ```
 
-## Render resource local
+## Render all manifests locally
 
-```
-  helm template \
-  --include-crds \
-  --output-dir _local/local \
-  --release-name kyverno \
-  --skip-tests \
-  -a cert-manager.io/v1 \
-  -a batch/v1/CronJob \
-  -a kyverno.io/v1 \
-  -f values-subchart-overrides.yaml \
-  -f values-local.yaml \
-  -n kyverno \
-  .
+```shell
+ helm dependency update && \
+ for cluster in $(yq '.environments | keys[]' helm-config.yaml); do
+    helm template \
+      -a "$(cluster=$cluster yq '.environments.[env(cluster)].apis | @csv' helm-config.yaml)" \
+      -f "$(cluster=$cluster yq '.environments.[env(cluster)].valueFiles | @csv' helm-config.yaml)" \
+      -n $(yq 'explode(.) | .namespace // ""' helm-config.yaml) \
+      --output-dir _local/$cluster \
+      --include-crds \
+      --release-name $(yq 'explode(.) | .releaseName // ""' helm-config.yaml) \
+      --skip-tests \
+      .
+ done
 ```
 
 ## Run act pipeline locally
@@ -68,3 +68,26 @@ To run the pipeline in local environment, start up the workbench, cd into the fo
 
 On first execution you're asked which flavour of the act image should be used. Using the default `medium`
 is a good starting point.
+
+## Hydration Workflow
+
+This repository implements a **GitOps Hydration Pattern**.
+The `helm-hydration.yaml` workflow is triggered by pushes to the `main` branch. It renders the Helm charts into static Kubernetes manifests and opens automated Pull Requests targeting the specific environment branches (e.g., `environments/local`, `environments/production`) defined in `helm-config.yaml`.
+
+### API Capabilities Configuration
+Because the hydration process runs in a CI environment without access to a live Kubernetes cluster, it must **mock** the cluster's available APIs (CRDs). This is controlled via the `apis` list in `helm-config.yaml`.
+
+If a chart (or its dependencies) uses conditional logic like `if .Capabilities.APIVersions.Has "..."`, and the specific API is missing from `helm-config.yaml`, the resource will **not** be rendered in the final manifest.
+
+### dependency Scanning
+To ensure all conditional resources are correctly rendered, use the provided static analysis tool:
+
+```bash
+./scan-helm-capabilities.sh
+```
+
+This script:
+1.  Downloads and extracts all chart dependencies locally.
+2.  Recursively scans all templates (`.yaml`, `.tpl`) in your chart and its sub-charts.
+3.  Identifies every instance of `.Capabilities.APIVersions.Has`.
+4.  Outputs the exact list of API strings (Groups and Kinds) required in your `helm-config.yaml`.
