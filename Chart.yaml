@@ -3,5 +3,5 @@ name: &name kyverno
 version: 1.0.0
 dependencies:
 - name: *name
-  version: 3.3.7
+  version: 3.7.1
   repository: https://kyverno.github.io/kyverno/
