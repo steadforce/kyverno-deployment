@@ -124,3 +124,18 @@ tests:
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts: *assertLoggingTextFormat
+- it: admission controller (sf-k8s04-dev) - reduced memory request
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-sf-k8s04-dev.yaml
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.memory
+      value: 256Mi
+  # the limit is deliberately left untouched so the controller can still burst
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.memory
+      value: 1024Mi
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.cpu
+      value: 500m
