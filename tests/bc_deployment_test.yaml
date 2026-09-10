@@ -77,7 +77,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: background controller production cluster - logging custom verbosity
-  values:
+  values: &productionValues
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts: *assertLoggingCustomVerbosity
@@ -104,7 +104,5 @@ tests:
   values: *overridesValues
   asserts: *assertLoggingTextFormat
 - it: background controller production cluster - logging text format
-  values:
-  - ../values-subchart-overrides.yaml
-  - ../values-production.yaml
+  values: *productionValues
   asserts: *assertLoggingTextFormat
