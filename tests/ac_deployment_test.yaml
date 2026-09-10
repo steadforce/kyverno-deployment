@@ -85,7 +85,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: admission controller production cluster - logging custom verbosity
-  values:
+  values: &productionValues
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts: *assertLoggingCustomVerbosity
@@ -120,9 +120,7 @@ tests:
   values: *overridesValues
   asserts: *assertLoggingTextFormat
 - it: admission controller production cluster - logging text format
-  values:
-  - ../values-subchart-overrides.yaml
-  - ../values-production.yaml
+  values: *productionValues
   asserts: *assertLoggingTextFormat
 - it: admission controller (sf-k8s04-dev) - reduced memory request
   values:
