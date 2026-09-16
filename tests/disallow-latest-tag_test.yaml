@@ -7,7 +7,7 @@ capabilities:
   apiVersions:
   - kyverno.io/v1
 tests:
-- it: default cluster - enforces validation failure action
+- it: default cluster - enforces policy
   values: &valuesSubchartOverrides
   - ../values-subchart-overrides.yaml
   asserts:
@@ -15,7 +15,7 @@ tests:
       path: spec.validationFailureAction
       value: enforce
   - matchSnapshot: {}
-- it: local cluster - audits validation failure action
+- it: local cluster - does not enforce policy, only warns
   values:
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
@@ -24,7 +24,7 @@ tests:
       path: spec.validationFailureAction
       value: audit
   - matchSnapshot: {}
-- it: production cluster - audits validation failure action
+- it: production cluster - does not enforce policy, only warns
   values:
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
@@ -33,7 +33,7 @@ tests:
       path: spec.validationFailureAction
       value: audit
   - matchSnapshot: {}
-- it: sf-k8s04-dev cluster - keeps enforced validation failure action
+- it: sf-k8s04-dev cluster - enforces policy
   values:
   - ../values-subchart-overrides.yaml
   - ../values-sf-k8s04-dev.yaml
