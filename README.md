@@ -27,6 +27,7 @@ This chart wraps the upstream `kyverno` chart as a dependency and adds:
 | `values-local.yaml`                | Overrides for local development clusters.                               |
 | `values-production.yaml`           | Overrides for production clusters.                                      |
 | `values-sf-k8s04-dev.yaml`         | Overrides for the `sf-k8s04-dev` cluster.                                |
+| `values-sf-k8s05-dev.yaml`         | Overrides for the `sf-k8s05-dev` cluster.                                |
 | `values-subchart-overrides.yaml`   | Values forwarded to the `kyverno` subchart (see [Testing](#testing)).    |
 
 ## Cluster Policies
@@ -49,6 +50,7 @@ The following `ClusterPolicy` and `ClusterCleanupPolicy` resources are added on 
 | `values-local.yaml`                | Relaxed resource limits and audit-only enforcement for local dev.    |
 | `values-production.yaml`           | Audit-only policy enforcement for production clusters.               |
 | `values-sf-k8s04-dev.yaml`         | Cluster-specific resource tuning for `sf-k8s04-dev`.                 |
+| `values-sf-k8s05-dev.yaml`         | Cluster-specific resource tuning for `sf-k8s05-dev`.                 |
 | `values-subchart-overrides.yaml`   | Subchart image, RBAC, resource, and feature overrides.               |
 
 ## Chart Dependencies
