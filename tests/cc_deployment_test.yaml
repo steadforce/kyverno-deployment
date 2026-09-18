@@ -73,7 +73,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: cleanup controller production cluster - logging custom verbosity
-  values:
+  values: &productionValues
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts: *assertLoggingCustomVerbosity
@@ -100,7 +100,5 @@ tests:
   values: *overridesValues
   asserts: *assertLoggingTextFormat
 - it: cleanup controller production cluster - logging text format
-  values:
-  - ../values-subchart-overrides.yaml
-  - ../values-production.yaml
+  values: *productionValues
   asserts: *assertLoggingTextFormat
