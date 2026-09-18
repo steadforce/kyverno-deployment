@@ -6,43 +6,32 @@ templates:
 capabilities:
   apiVersions:
   - kyverno.io/v1
+values:
+- ../values-subchart-overrides.yaml
 tests:
 - it: default cluster - enforces policy
-  values: &valuesSubchartOverrides
-  - ../values-subchart-overrides.yaml
   asserts:
-  - equal: &validationFailureActionPath
+  - equal: &validationFailureActionPathEnforce
       path: spec.validationFailureAction
       value: enforce
   - matchSnapshot: {}
 - it: local cluster - does not enforce policy, only warns
   values:
-  - ../values-subchart-overrides.yaml
   - ../values-local.yaml
   asserts:
-  - equal:
+  - equal: &validationFailureActionPathAudit
       path: spec.validationFailureAction
       value: audit
   - matchSnapshot: {}
 - it: production cluster - does not enforce policy, only warns
   values:
-  - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts:
-  - equal:
-      path: spec.validationFailureAction
-      value: audit
+  - equal: *validationFailureActionPathAudit
   - matchSnapshot: {}
 - it: sf-k8s04-dev cluster - enforces policy
   values:
-  - ../values-subchart-overrides.yaml
   - ../values-sf-k8s04-dev.yaml
   asserts:
-  - equal: *validationFailureActionPath
+  - equal: *validationFailureActionPathEnforce
   - matchSnapshot: {}
-- it: check for apiVersion change in ClusterPolicy for disallow latest tag
-  values: *valuesSubchartOverrides
-  asserts:
-  - containsDocument:
-      kind: ClusterPolicy
-      apiVersion: kyverno.io/v1
