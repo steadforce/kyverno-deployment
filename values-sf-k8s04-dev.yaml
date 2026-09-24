@@ -1,0 +1,6 @@
+kyverno:
+  admissionController:
+    container:
+      resources:
+        requests:
+          memory: 256Mi

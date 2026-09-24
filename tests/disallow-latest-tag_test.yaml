@@ -1,0 +1,37 @@
+suite: "test disallow latest tag policy"
+release:
+  name: kyverno
+templates:
+- disallow-latest-tag.yaml
+capabilities:
+  apiVersions:
+  - kyverno.io/v1
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: default cluster - enforces policy
+  asserts:
+  - equal: &validationFailureActionPathEnforce
+      path: spec.validationFailureAction
+      value: enforce
+  - matchSnapshot: {}
+- it: local cluster - does not enforce policy, only warns
+  values:
+  - ../values-local.yaml
+  asserts:
+  - equal: &validationFailureActionPathAudit
+      path: spec.validationFailureAction
+      value: audit
+  - matchSnapshot: {}
+- it: production cluster - does not enforce policy, only warns
+  values:
+  - ../values-production.yaml
+  asserts:
+  - equal: *validationFailureActionPathAudit
+  - matchSnapshot: {}
+- it: sf-k8s04-dev cluster - enforces policy
+  values:
+  - ../values-sf-k8s04-dev.yaml
+  asserts:
+  - equal: *validationFailureActionPathEnforce
+  - matchSnapshot: {}
