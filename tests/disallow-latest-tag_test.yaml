@@ -35,3 +35,9 @@ tests:
   asserts:
   - equal: *validationFailureActionPathEnforce
   - matchSnapshot: {}
+- it: sf-k8s05-dev cluster - enforces policy
+  values:
+  - ../values-sf-k8s05-dev.yaml
+  asserts:
+  - equal: *validationFailureActionPathEnforce
+  - matchSnapshot: {}
