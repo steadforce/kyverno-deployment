@@ -65,6 +65,7 @@ The following resources are added on top of the upstream chart:
 | [`values-local.yaml`](values-local.yaml) | Local clusters | Single replicas, near-zero resources, audit only. |
 | [`values-production.yaml`](values-production.yaml) | Production clusters | Audit-only `disallow-latest-tag`. |
 | [`values-sf-k8s04-dev.yaml`](values-sf-k8s04-dev.yaml) | `sf-k8s04-dev` | Admission controller memory request. |
+| [`values-sf-k8s05-dev.yaml`](values-sf-k8s05-dev.yaml) | `sf-k8s05-dev` | Admission controller memory request. |
 
 `values.yaml` sets `policies.disallowLatestTag.validationFailureAction` to `enforce`, and
 `policies.requireRequestsAndLimits.validationFailureAction` to `audit`, which no template currently uses.
