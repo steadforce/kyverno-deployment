@@ -1,4 +1,4 @@
-suite: "test deployment for kyverno reports controller"
+suite: kyverno reports controller deployment per cluster
 release:
   name: kyverno
 templates:

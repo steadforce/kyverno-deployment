@@ -1,4 +1,4 @@
-suite: "test additional cluster roles for kyverno background controller"
+suite: kyverno background controller cluster roles per cluster
 release:
   name: kyverno
 templates:

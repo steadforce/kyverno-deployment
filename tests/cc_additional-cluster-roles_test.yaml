@@ -1,4 +1,4 @@
-suite: "test additional cluster roles for kyverno cleanup controller"
+suite: kyverno cleanup controller cluster roles per cluster
 release:
   name: kyverno
 templates:
