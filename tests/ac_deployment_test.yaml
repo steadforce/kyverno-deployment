@@ -4,7 +4,7 @@ release:
 templates:
 - charts/kyverno/templates/admission-controller/deployment.yaml
 tests:
-- it: admission controller (local) - local container resources
+- it: sets zero cpu and memory requests on the kyverno container on local clusters
   values: &localValues
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
@@ -23,7 +23,7 @@ tests:
       pattern: "^0.*"
   - matchSnapshot:
       path: spec.template.spec
-- it: admission controller (all cluster types) - non-local container resources
+- it: keeps non-zero kyverno container resources on non-local clusters
   values: &overridesValues
   - ../values-subchart-overrides.yaml
   asserts:
@@ -41,7 +41,7 @@ tests:
       pattern: "^[1-9].*"
   - matchSnapshot:
       path: spec.template.spec
-- it: admission controller (all cluster types) - enabled policyExceptions feature
+- it: enables policy exceptions on non-local clusters
   values: *overridesValues
   asserts:
   - contains:
@@ -50,7 +50,7 @@ tests:
         --enablePolicyException=true
   - matchSnapshot:
       path: spec.template.spec
-- it: admission controller (all cluster types) - subchart disabled policyExceptions feature
+- it: disables policy exceptions with subchart defaults
   asserts:
   - contains:
       path: *kyvernoContainerArgsPath
@@ -58,7 +58,7 @@ tests:
         --enablePolicyException=false
   - matchSnapshot:
       path: spec.template.spec
-- it: admission controller local cluster - logging custom verbosity
+- it: sets log verbosity 3 on local clusters
   values: *localValues
   asserts:
   - contains:
@@ -71,7 +71,7 @@ tests:
         --v=3
   - matchSnapshot:
       path: spec.template.spec
-- it: admission controller development cluster - logging custom verbosity
+- it: sets log verbosity -1 on non-local clusters
   values: *overridesValues
   asserts: &assertLoggingCustomVerbosity
   - contains:
@@ -84,12 +84,12 @@ tests:
         --v=-1
   - matchSnapshot:
       path: spec.template.spec
-- it: admission controller production cluster - logging custom verbosity
+- it: sets log verbosity -1 on production clusters
   values: &productionValues
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts: *assertLoggingCustomVerbosity
-- it: admission controller - logging default verbosity
+- it: uses log verbosity 2 with subchart defaults
   asserts:
   - contains:
       path: *kyvernoContainerArgsPath
@@ -101,7 +101,7 @@ tests:
         --v=2
   - matchSnapshot:
       path: spec.template.spec
-- it: admission controller - logging default text format
+- it: uses the text log format with subchart defaults
   asserts: &assertLoggingTextFormat
   - contains:
       path: *kyvernoContainerArgsPath
@@ -113,13 +113,13 @@ tests:
         --loggingFormat=text
   - matchSnapshot:
       path: spec.template.spec
-- it: admission controller local cluster - logging text format
+- it: uses the text log format on local clusters
   values: *localValues
   asserts: *assertLoggingTextFormat
-- it: admission controller development cluster - logging text format
+- it: uses the text log format on non-local clusters
   values: *overridesValues
   asserts: *assertLoggingTextFormat
-- it: admission controller production cluster - logging text format
+- it: uses the text log format on production clusters
   values: *productionValues
   asserts: *assertLoggingTextFormat
 - it: uses the system-cluster-critical priority class

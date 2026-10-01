@@ -4,7 +4,7 @@ release:
 templates:
 - charts/kyverno/templates/reports-controller/clusterrole.yaml
 tests:
-- it: reports controller (all cluster types) - core clusterrole does not contain secret resource
+- it: omits secrets from the core cluster role on non-local clusters
   values: &valuesSubchartOverrides
   - ../values-subchart-overrides.yaml
   asserts:
@@ -14,7 +14,7 @@ tests:
       path: metadata.name
       value: kyverno:reports-controller:core
   - matchSnapshot: {}
-- it: reports controller (local clusters) - core clusterrole does not contain secret resource
+- it: omits secrets from the core cluster role on local clusters
   values:
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
@@ -22,7 +22,7 @@ tests:
   - notExists: *secretRules
     documentSelector: *reportsControllerCore
   - matchSnapshot: {}
-- it: reports controller (production clusters) - core clusterrole does not contain secret resource
+- it: omits secrets from the core cluster role on production clusters
   values:
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
@@ -30,7 +30,7 @@ tests:
   - notExists: *secretRules
     documentSelector: *reportsControllerCore
   - matchSnapshot: {}
-- it: check for apiVersion change in ClusterRole for kyverno reports controller
+- it: uses the rbac.authorization.k8s.io/v1 api version on non-local clusters
   values: *valuesSubchartOverrides
   asserts:
   - containsDocument:

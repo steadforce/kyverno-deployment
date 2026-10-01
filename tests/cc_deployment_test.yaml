@@ -4,7 +4,7 @@ release:
 templates:
 - charts/kyverno/templates/cleanup-controller/deployment.yaml
 tests:
-- it: cleanup controller (local clusters) - local container resources
+- it: sets zero cpu and memory requests on the controller container on local clusters
   values: &localValues
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
@@ -23,7 +23,7 @@ tests:
       pattern: "^0.*"
   - matchSnapshot:
       path: spec.template.spec
-- it: cleanup controller (all clusters) - non-local container resources
+- it: keeps non-zero controller container resources on non-local clusters
   values: &overridesValues
   - ../values-subchart-overrides.yaml
   asserts:
@@ -41,20 +41,20 @@ tests:
       pattern: "^[1-9].*"
   - matchSnapshot:
       path: spec.template.spec
-- it: cleanup controller (all clusters) - ensure policyException feature is not present
+- it: omits the enabled policy exception flag on non-local clusters
   values: *overridesValues
   asserts:
   - notExists:
       path: spec.template.spec.containers[*].args[?(@ == '--enablePolicyException=true')]
   - matchSnapshot:
       path: spec.template.spec
-- it: cleanup controller (all cluster types) - subchart ensure policyException feature is not present
+- it: omits the disabled policy exception flag with subchart defaults
   asserts:
   - notExists:
       path: spec.template.spec.containers[*].args[?(@ == '--enablePolicyException=false')]
   - matchSnapshot:
       path: spec.template.spec
-- it: cleanup controller local cluster - logging custom verbosity
+- it: sets log verbosity 3 on local clusters
   values: *localValues
   asserts:
   - contains:
@@ -63,7 +63,7 @@ tests:
         --v=3
   - matchSnapshot:
       path: spec.template.spec
-- it: cleanup controller development cluster - logging custom verbosity
+- it: sets log verbosity -1 on non-local clusters
   values: *overridesValues
   asserts: &assertLoggingCustomVerbosity
   - contains:
@@ -72,12 +72,12 @@ tests:
         --v=-1
   - matchSnapshot:
       path: spec.template.spec
-- it: cleanup controller production cluster - logging custom verbosity
+- it: sets log verbosity -1 on production clusters
   values: &productionValues
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts: *assertLoggingCustomVerbosity
-- it: cleanup controller - logging default verbosity
+- it: uses log verbosity 2 with subchart defaults
   asserts:
   - contains:
       path: *kyvernoContainerArgsPath
@@ -85,7 +85,7 @@ tests:
         --v=2
   - matchSnapshot:
       path: spec.template.spec
-- it: cleanup controller - logging default text format
+- it: uses the text log format with subchart defaults
   asserts: &assertLoggingTextFormat
   - contains:
       path: *kyvernoContainerArgsPath
@@ -93,13 +93,13 @@ tests:
         --loggingFormat=text
   - matchSnapshot:
       path: spec.template.spec
-- it: cleanup controller local cluster - logging text format
+- it: uses the text log format on local clusters
   values: *localValues
   asserts: *assertLoggingTextFormat
-- it: cleanup controller development cluster - logging text format
+- it: uses the text log format on non-local clusters
   values: *overridesValues
   asserts: *assertLoggingTextFormat
-- it: cleanup controller production cluster - logging text format
+- it: uses the text log format on production clusters
   values: *productionValues
   asserts: *assertLoggingTextFormat
 - it: uses the system-cluster-critical priority class
