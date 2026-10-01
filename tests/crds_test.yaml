@@ -1,0 +1,35 @@
+suite: kyverno crds argo cd sync options
+release:
+  name: kyverno
+templates:
+- charts/kyverno/charts/crds/templates/kyverno.io/kyverno.io_cleanuppolicies.yaml
+- charts/kyverno/charts/crds/templates/kyverno.io/kyverno.io_clustercleanuppolicies.yaml
+- charts/kyverno/charts/crds/templates/kyverno.io/kyverno.io_clusterpolicies.yaml
+- charts/kyverno/charts/crds/templates/kyverno.io/kyverno.io_globalcontextentries.yaml
+- charts/kyverno/charts/crds/templates/kyverno.io/kyverno.io_policies.yaml
+- charts/kyverno/charts/crds/templates/kyverno.io/kyverno.io_policyexceptions.yaml
+- charts/kyverno/charts/crds/templates/kyverno.io/kyverno.io_updaterequests.yaml
+- charts/kyverno/charts/crds/templates/reports.kyverno.io/reports.kyverno.io_clusterephemeralreports.yaml
+- charts/kyverno/charts/crds/templates/reports.kyverno.io/reports.kyverno.io_ephemeralreports.yaml
+- charts/kyverno/charts/crds/templates/wgpolicyk8s.io/wgpolicyk8s.io_clusterpolicyreports.yaml
+- charts/kyverno/charts/crds/templates/wgpolicyk8s.io/wgpolicyk8s.io_policyreports.yaml
+tests:
+- it: sets the server-side apply sync option on all kyverno crds
+  values:
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - equal: &serverSideApplyAssert
+      path: metadata.annotations["argocd.argoproj.io/sync-options"]
+      value: ServerSideApply=true
+- it: sets the server-side apply sync option on production clusters
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - equal: *serverSideApplyAssert
+- it: sets the server-side apply sync option on local clusters
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts:
+  - equal: *serverSideApplyAssert

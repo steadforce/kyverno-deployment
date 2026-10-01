@@ -122,3 +122,74 @@ tests:
 - it: admission controller production cluster - logging text format
   values: *productionValues
   asserts: *assertLoggingTextFormat
+- it: uses the system-cluster-critical priority class
+  values: *overridesValues
+  asserts:
+  - equal:
+      path: spec.template.spec.priorityClassName
+      value: system-cluster-critical
+- it: runs three replicas on non-local clusters
+  values: *overridesValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs three replicas on production clusters
+  values: *productionValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs one replica on local clusters
+  values: *localValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 1
+- it: disables admission reports
+  values: *overridesValues
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content: --admissionReports=false
+- it: allows policy exceptions in all namespaces
+  values: *overridesValues
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content: --exceptionNamespace=*
+- it: sets zero cpu for the init container on local clusters
+  values: *localValues
+  asserts:
+  - matchRegex:
+      path: &kyvernoPreLimitsCpuPath spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.limits.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.requests.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.requests.memory
+      pattern: "^0.*"
+- it: keeps non-zero init container resources on non-local clusters
+  values: *overridesValues
+  asserts:
+  - matchRegex:
+      path: *kyvernoPreLimitsCpuPath
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.requests.memory
+      pattern: "^[1-9].*"
+- it: sets the sf-k8s04-dev memory request on the kyverno container
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-sf-k8s04-dev.yaml
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.memory
+      value: 256Mi
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.cpu
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.memory
+      pattern: "^[1-9].*"

@@ -106,3 +106,33 @@ tests:
 - it: reports controller production cluster - logging text format
   values: *productionValues
   asserts: *assertLoggingTextFormat
+- it: runs three replicas on non-local clusters
+  values: *overridesValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs three replicas on production clusters
+  values: *productionValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs one replica on local clusters
+  values: *localValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 1
+- it: disables admission reports
+  values: *overridesValues
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content: --admissionReports=false
+- it: allows policy exceptions in all namespaces
+  values: *overridesValues
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content: --exceptionNamespace=*

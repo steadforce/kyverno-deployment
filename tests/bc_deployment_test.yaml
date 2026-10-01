@@ -106,3 +106,33 @@ tests:
 - it: background controller production cluster - logging text format
   values: *productionValues
   asserts: *assertLoggingTextFormat
+- it: uses the system-cluster-critical priority class
+  values: *overridesValues
+  asserts:
+  - equal:
+      path: spec.template.spec.priorityClassName
+      value: system-cluster-critical
+- it: runs three replicas on non-local clusters
+  values: *overridesValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs three replicas on production clusters
+  values: *productionValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs one replica on local clusters
+  values: *localValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 1
+- it: allows policy exceptions in all namespaces
+  values: *overridesValues
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content: --exceptionNamespace=*

@@ -102,3 +102,9 @@ tests:
 - it: cleanup controller production cluster - logging text format
   values: *productionValues
   asserts: *assertLoggingTextFormat
+- it: uses the system-cluster-critical priority class
+  values: *overridesValues
+  asserts:
+  - equal:
+      path: spec.template.spec.priorityClassName
+      value: system-cluster-critical
