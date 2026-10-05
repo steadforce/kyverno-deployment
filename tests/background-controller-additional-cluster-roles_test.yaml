@@ -19,10 +19,8 @@ tests:
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
   asserts:
-  - notContains:
-      path: rules
-      content:
-        path: *secretResourcePathExpression
+  - notExists:
+      path: *secretResourcePathExpression
     documentSelector: *backgroundControllerCoreSelector
   - matchSnapshot: {}
 - it: omits secrets from the core cluster role on production clusters
@@ -30,10 +28,8 @@ tests:
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts:
-  - notContains:
-      path: rules
-      content:
-        path: *secretResourcePathExpression
+  - notExists:
+      path: *secretResourcePathExpression
     documentSelector: *backgroundControllerCoreSelector
   - matchSnapshot: {}
 - it: grants write access in the additional cluster role on non-local clusters
