@@ -24,7 +24,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: keeps non-zero controller container resources on non-local clusters
-  values: &overridesValues
+  values: &subchartOverrideValues
   - ../values-subchart-overrides.yaml
   asserts:
   - matchRegex:
@@ -42,7 +42,7 @@ tests:
   - matchSnapshot:
       path: spec.template.spec
 - it: omits the enabled policy exception flag on non-local clusters
-  values: *overridesValues
+  values: *subchartOverrideValues
   asserts:
   - notExists:
       path: spec.template.spec.containers[*].args[?(@ == '--enablePolicyException=true')]
@@ -58,16 +58,16 @@ tests:
   values: *localValues
   asserts:
   - contains:
-      path: &kyvernoContainerArgsPath spec.template.spec.containers[?(@.name == "controller")].args
+      path: &controllerContainerArgsPath spec.template.spec.containers[?(@.name == "controller")].args
       content:
         --v=3
   - matchSnapshot:
       path: spec.template.spec
 - it: sets log verbosity -1 on non-local clusters
-  values: *overridesValues
-  asserts: &assertLoggingCustomVerbosity
+  values: *subchartOverrideValues
+  asserts: &customLogVerbosityAssert
   - contains:
-      path: *kyvernoContainerArgsPath
+      path: *controllerContainerArgsPath
       content:
         --v=-1
   - matchSnapshot:
@@ -76,34 +76,34 @@ tests:
   values: &productionValues
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
-  asserts: *assertLoggingCustomVerbosity
+  asserts: *customLogVerbosityAssert
 - it: uses log verbosity 2 with subchart defaults
   asserts:
   - contains:
-      path: *kyvernoContainerArgsPath
+      path: *controllerContainerArgsPath
       content:
         --v=2
   - matchSnapshot:
       path: spec.template.spec
 - it: uses the text log format with subchart defaults
-  asserts: &assertLoggingTextFormat
+  asserts: &textLogFormatAssert
   - contains:
-      path: *kyvernoContainerArgsPath
+      path: *controllerContainerArgsPath
       content:
         --loggingFormat=text
   - matchSnapshot:
       path: spec.template.spec
 - it: uses the text log format on local clusters
   values: *localValues
-  asserts: *assertLoggingTextFormat
+  asserts: *textLogFormatAssert
 - it: uses the text log format on non-local clusters
-  values: *overridesValues
-  asserts: *assertLoggingTextFormat
+  values: *subchartOverrideValues
+  asserts: *textLogFormatAssert
 - it: uses the text log format on production clusters
   values: *productionValues
-  asserts: *assertLoggingTextFormat
+  asserts: *textLogFormatAssert
 - it: uses the system-cluster-critical priority class
-  values: *overridesValues
+  values: *subchartOverrideValues
   asserts:
   - equal:
       path: spec.template.spec.priorityClassName

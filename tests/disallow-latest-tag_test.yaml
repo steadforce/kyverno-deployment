@@ -11,7 +11,7 @@ values:
 tests:
 - it: sets the policy to enforce on default clusters
   asserts:
-  - equal: &validationFailureActionPathEnforce
+  - equal: &enforceValidationFailureActionAssert
       path: spec.validationFailureAction
       value: enforce
   - matchSnapshot: {}
@@ -19,7 +19,7 @@ tests:
   values:
   - ../values-local.yaml
   asserts:
-  - equal: &validationFailureActionPathAudit
+  - equal: &auditValidationFailureActionAssert
       path: spec.validationFailureAction
       value: audit
   - matchSnapshot: {}
@@ -27,11 +27,11 @@ tests:
   values:
   - ../values-production.yaml
   asserts:
-  - equal: *validationFailureActionPathAudit
+  - equal: *auditValidationFailureActionAssert
   - matchSnapshot: {}
 - it: sets the policy to enforce on the sf-k8s04-dev cluster
   values:
   - ../values-sf-k8s04-dev.yaml
   asserts:
-  - equal: *validationFailureActionPathEnforce
+  - equal: *enforceValidationFailureActionAssert
   - matchSnapshot: {}
