@@ -1,10 +1,10 @@
-suite: "test deployment for kyverno reports controller"
+suite: kyverno reports controller deployment per cluster
 release:
   name: kyverno
 templates:
 - charts/kyverno/templates/reports-controller/deployment.yaml
 tests:
-- it: reports controller (local clusters) - local container resources
+- it: sets zero cpu and memory requests on the controller container on local clusters
   values: &localValues
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
@@ -23,8 +23,8 @@ tests:
       pattern: "^0.*"
   - matchSnapshot:
       path: spec.template.spec
-- it: reports controller (all clusters) - non-local container resources
-  values: &overridesValues
+- it: keeps non-zero controller container resources on non-local clusters
+  values: &subchartOverrideValues
   - ../values-subchart-overrides.yaml
   asserts:
   - matchRegex:
@@ -41,68 +41,98 @@ tests:
       pattern: "^[1-9].*"
   - matchSnapshot:
       path: spec.template.spec
-- it: reports controller (all clusters) - enabled policyExceptions feature
-  values: *overridesValues
+- it: enables policy exceptions on non-local clusters
+  values: *subchartOverrideValues
   asserts:
   - contains:
-      path: &kyvernoContainerArgsPath spec.template.spec.containers[?(@.name == "controller")].args
+      path: &controllerContainerArgsPath spec.template.spec.containers[?(@.name == "controller")].args
       content:
         --enablePolicyException=true
   - matchSnapshot:
       path: spec.template.spec
-- it: reports controller (all clusters) - subchart disabled policyExceptions feature
+- it: disables policy exceptions with subchart defaults
   asserts:
   - contains:
-      path: *kyvernoContainerArgsPath
+      path: *controllerContainerArgsPath
       content:
         --enablePolicyException=false
   - matchSnapshot:
       path: spec.template.spec
-- it: reports controller local cluster - logging custom verbosity
+- it: sets log verbosity 3 on local clusters
   values: *localValues
   asserts:
   - contains:
-      path: *kyvernoContainerArgsPath
+      path: *controllerContainerArgsPath
       content:
         --v=3
   - matchSnapshot:
       path: spec.template.spec
-- it: reports controller development cluster - logging custom verbosity
-  values: *overridesValues
-  asserts: &assertLoggingCustomVerbosity
+- it: sets log verbosity -1 on non-local clusters
+  values: *subchartOverrideValues
+  asserts: &customLogVerbosityAssert
   - contains:
-      path: *kyvernoContainerArgsPath
+      path: *controllerContainerArgsPath
       content:
         --v=-1
   - matchSnapshot:
       path: spec.template.spec
-- it: reports controller production cluster - logging custom verbosity
+- it: sets log verbosity -1 on production clusters
   values: &productionValues
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
-  asserts: *assertLoggingCustomVerbosity
-- it: reports controller - logging default verbosity
+  asserts: *customLogVerbosityAssert
+- it: uses log verbosity 2 with subchart defaults
   asserts:
   - contains:
-      path: *kyvernoContainerArgsPath
+      path: *controllerContainerArgsPath
       content:
         --v=2
   - matchSnapshot:
       path: spec.template.spec
-- it: reports controller - logging default text format
-  asserts: &assertLoggingTextFormat
+- it: uses the text log format with subchart defaults
+  asserts: &textLogFormatAssert
   - contains:
-      path: *kyvernoContainerArgsPath
+      path: *controllerContainerArgsPath
       content:
         --loggingFormat=text
   - matchSnapshot:
       path: spec.template.spec
-- it: reports controller local cluster - logging text format
+- it: uses the text log format on local clusters
   values: *localValues
-  asserts: *assertLoggingTextFormat
-- it: reports controller development cluster - logging text format
-  values: *overridesValues
-  asserts: *assertLoggingTextFormat
-- it: reports controller production cluster - logging text format
+  asserts: *textLogFormatAssert
+- it: uses the text log format on non-local clusters
+  values: *subchartOverrideValues
+  asserts: *textLogFormatAssert
+- it: uses the text log format on production clusters
   values: *productionValues
-  asserts: *assertLoggingTextFormat
+  asserts: *textLogFormatAssert
+- it: runs three replicas on non-local clusters
+  values: *subchartOverrideValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs three replicas on production clusters
+  values: *productionValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs one replica on local clusters
+  values: *localValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 1
+- it: disables admission reports
+  values: *subchartOverrideValues
+  asserts:
+  - contains:
+      path: *controllerContainerArgsPath
+      content: --admissionReports=false
+- it: allows policy exceptions in all namespaces
+  values: *subchartOverrideValues
+  asserts:
+  - contains:
+      path: *controllerContainerArgsPath
+      content: --exceptionNamespace=*

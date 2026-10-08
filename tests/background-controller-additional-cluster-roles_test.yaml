@@ -1,41 +1,39 @@
-suite: "test additional cluster roles for kyverno background controller"
+suite: kyverno background controller cluster roles per cluster
 release:
   name: kyverno
 templates:
 - charts/kyverno/templates/background-controller/clusterrole.yaml
 tests:
-- it: background controller (all cluster types) - core clusterrole does not contain secret resource
-  values: &valuesSubchartOverrides
+- it: omits secrets from the core cluster role on non-local clusters
+  values: &subchartOverrideValues
   - ../values-subchart-overrides.yaml
   asserts:
-  - notExists: &secretRules
-      path: rules[*].resources[?(@ == 'secrets')]
-    documentSelector: &backgroundControllerCore
+  - notExists:
+      path: &secretResourcePathExpression rules[*].resources[?(@ == 'secrets')]
+    documentSelector: &backgroundControllerCoreSelector
       path: metadata.name
       value: kyverno:background-controller:core
   - matchSnapshot: {}
-- it: background controller (local clusters) - core clusterrole does not contain secret resource
+- it: omits secrets from the core cluster role on local clusters
   values:
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
   asserts:
-  - notContains:
-      path: rules
-      content: *secretRules
-    documentSelector: *backgroundControllerCore
+  - notExists:
+      path: *secretResourcePathExpression
+    documentSelector: *backgroundControllerCoreSelector
   - matchSnapshot: {}
-- it: background controller (production clusters) - core clusterrole does not contain secret resource
+- it: omits secrets from the core cluster role on production clusters
   values:
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts:
-  - notContains:
-      path: rules
-      content: *secretRules
-    documentSelector: *backgroundControllerCore
+  - notExists:
+      path: *secretResourcePathExpression
+    documentSelector: *backgroundControllerCoreSelector
   - matchSnapshot: {}
-- it: background controller (full clusters ) - additional cluster role contains secret, msd and Sidecar resource
-  values: *valuesSubchartOverrides
+- it: grants write access in the additional cluster role on non-local clusters
+  values: *subchartOverrideValues
   asserts:
   - equal:
       path: rules
@@ -101,8 +99,8 @@ tests:
       path: metadata.name
       value: kyverno:background-controller:additional
   - matchSnapshot: {}
-- it: check for apiVersion change in ClusterRole for kyverno background controller
-  values: *valuesSubchartOverrides
+- it: uses the rbac.authorization.k8s.io/v1 api version on non-local clusters
+  values: *subchartOverrideValues
   asserts:
   - containsDocument:
       kind: ClusterRole

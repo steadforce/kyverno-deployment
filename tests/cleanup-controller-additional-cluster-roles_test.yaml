@@ -1,0 +1,60 @@
+suite: kyverno cleanup controller cluster roles per cluster
+release:
+  name: kyverno
+templates:
+- charts/kyverno/templates/cleanup-controller/clusterrole.yaml
+tests:
+- it: omits secrets from the core cluster role on non-local clusters
+  values: &subchartOverrideValues
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - notExists:
+      path: &secretResourcePathExpression rules[*].resources[?(@ == 'secrets')]
+    documentSelector: &cleanupControllerCoreSelector
+      path: metadata.name
+      value: kyverno:cleanup-controller:core
+  - matchSnapshot: {}
+- it: omits secrets from the core cluster role on local clusters
+  values: &localValues
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts:
+  - notExists:
+      path: *secretResourcePathExpression
+    documentSelector: *cleanupControllerCoreSelector
+  - matchSnapshot: {}
+- it: omits secrets from the core cluster role on production clusters
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - notExists:
+      path: *secretResourcePathExpression
+    documentSelector: *cleanupControllerCoreSelector
+  - matchSnapshot: {}
+- it: grants job deletion in the additional cluster role on local clusters
+  values: *localValues
+  asserts:
+  - contains:
+      path: rules
+      content:
+        apiGroups:
+        - batch
+        - extensions
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - get
+        - list
+    documentSelector:
+      path: metadata.name
+      value: kyverno:cleanup-controller:additional
+  - matchSnapshot: {}
+- it: uses the rbac.authorization.k8s.io/v1 api version on non-local clusters
+  values: *subchartOverrideValues
+  asserts:
+  - containsDocument:
+      kind: ClusterRole
+      apiVersion: rbac.authorization.k8s.io/v1
+  - matchSnapshot: {}

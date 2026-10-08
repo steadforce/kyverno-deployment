@@ -1,0 +1,195 @@
+suite: kyverno admission controller deployment per cluster
+release:
+  name: kyverno
+templates:
+- charts/kyverno/templates/admission-controller/deployment.yaml
+tests:
+- it: sets zero cpu and memory requests on the kyverno container on local clusters
+  values: &localValues
+  - ../values-subchart-overrides.yaml
+  - ../values-local.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.memory
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.memory
+      pattern: "^0.*"
+  - matchSnapshot:
+      path: spec.template.spec
+- it: keeps non-zero kyverno container resources on non-local clusters
+  values: &subchartOverrideValues
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.cpu
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.memory
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.cpu
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.memory
+      pattern: "^[1-9].*"
+  - matchSnapshot:
+      path: spec.template.spec
+- it: enables policy exceptions on non-local clusters
+  values: *subchartOverrideValues
+  asserts:
+  - contains:
+      path: &kyvernoContainerArgsPath spec.template.spec.containers[?(@.name == "kyverno")].args
+      content:
+        --enablePolicyException=true
+  - matchSnapshot:
+      path: spec.template.spec
+- it: disables policy exceptions with subchart defaults
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content:
+        --enablePolicyException=false
+  - matchSnapshot:
+      path: spec.template.spec
+- it: sets log verbosity 3 on local clusters
+  values: *localValues
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content:
+        --v=3
+  - contains:
+      path: &kyvernoPreArgsPath spec.template.spec.initContainers[?(@.name == "kyverno-pre")].args
+      content:
+        --v=3
+  - matchSnapshot:
+      path: spec.template.spec
+- it: sets log verbosity -1 on non-local clusters
+  values: *subchartOverrideValues
+  asserts: &customLogVerbosityAssert
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content:
+        --v=-1
+  - contains:
+      path: *kyvernoPreArgsPath
+      content:
+        --v=-1
+  - matchSnapshot:
+      path: spec.template.spec
+- it: sets log verbosity -1 on production clusters
+  values: &productionValues
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts: *customLogVerbosityAssert
+- it: uses log verbosity 2 with subchart defaults
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content:
+        --v=2
+  - contains:
+      path: *kyvernoPreArgsPath
+      content:
+        --v=2
+  - matchSnapshot:
+      path: spec.template.spec
+- it: uses the text log format with subchart defaults
+  asserts: &textLogFormatAssert
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content:
+        --loggingFormat=text
+  - contains:
+      path: *kyvernoPreArgsPath
+      content:
+        --loggingFormat=text
+  - matchSnapshot:
+      path: spec.template.spec
+- it: uses the text log format on local clusters
+  values: *localValues
+  asserts: *textLogFormatAssert
+- it: uses the text log format on non-local clusters
+  values: *subchartOverrideValues
+  asserts: *textLogFormatAssert
+- it: uses the text log format on production clusters
+  values: *productionValues
+  asserts: *textLogFormatAssert
+- it: uses the system-cluster-critical priority class
+  values: *subchartOverrideValues
+  asserts:
+  - equal:
+      path: spec.template.spec.priorityClassName
+      value: system-cluster-critical
+- it: runs three replicas on non-local clusters
+  values: *subchartOverrideValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs three replicas on production clusters
+  values: *productionValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 3
+- it: runs one replica on local clusters
+  values: *localValues
+  asserts:
+  - equal:
+      path: spec.replicas
+      value: 1
+- it: disables admission reports
+  values: *subchartOverrideValues
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content: --admissionReports=false
+- it: allows policy exceptions in all namespaces
+  values: *subchartOverrideValues
+  asserts:
+  - contains:
+      path: *kyvernoContainerArgsPath
+      content: --exceptionNamespace=*
+- it: sets zero cpu for the init container on local clusters
+  values: *localValues
+  asserts:
+  - matchRegex:
+      path: &kyvernoPreLimitsCpuPath spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.limits.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.requests.cpu
+      pattern: "^0.*"
+  - matchRegex:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.requests.memory
+      pattern: "^0.*"
+- it: keeps non-zero init container resources on non-local clusters
+  values: *subchartOverrideValues
+  asserts:
+  - matchRegex:
+      path: *kyvernoPreLimitsCpuPath
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.requests.memory
+      pattern: "^[1-9].*"
+- it: sets the sf-k8s04-dev memory request on the kyverno container
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-sf-k8s04-dev.yaml
+  asserts:
+  - equal:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.memory
+      value: 256Mi
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.cpu
+      pattern: "^[1-9].*"
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.memory
+      pattern: "^[1-9].*"
