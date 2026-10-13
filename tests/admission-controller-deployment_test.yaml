@@ -9,18 +9,18 @@ tests:
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
   asserts:
-  - matchRegex:
+  - equal:
       path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.cpu
-      pattern: "^0.*"
+      value: 0m
   - matchRegex:
       path: spec.template.spec.containers[?(@.name == "kyverno")].resources.limits.memory
       pattern: "^[1-9].*"
-  - matchRegex:
+  - equal:
       path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.cpu
-      pattern: "^0.*"
-  - matchRegex:
+      value: 0m
+  - equal:
       path: spec.template.spec.containers[?(@.name == "kyverno")].resources.requests.memory
-      pattern: "^0.*"
+      value: 0Mi
   - matchSnapshot:
       path: spec.template.spec
 - it: keeps non-zero kyverno container resources on non-local clusters
@@ -161,15 +161,15 @@ tests:
 - it: sets zero cpu for the init container on local clusters
   values: *localValues
   asserts:
-  - matchRegex:
+  - equal:
       path: &kyvernoPreLimitsCpuPath spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.limits.cpu
-      pattern: "^0.*"
-  - matchRegex:
+      value: 0m
+  - equal:
       path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.requests.cpu
-      pattern: "^0.*"
-  - matchRegex:
+      value: 0m
+  - equal:
       path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].resources.requests.memory
-      pattern: "^0.*"
+      value: 0Mi
 - it: keeps non-zero init container resources on non-local clusters
   values: *subchartOverrideValues
   asserts:
