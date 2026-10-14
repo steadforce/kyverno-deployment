@@ -1,0 +1,20 @@
+suite: kyverno webhooks cleanup hooks
+release:
+  name: kyverno
+values:
+- ../values-subchart-overrides.yaml
+tests:
+- it: omits the pre-delete cleanup jobs
+  templates:
+  - charts/kyverno/templates/hooks/pre-delete-scale-to-zero.yaml
+  - charts/kyverno/templates/hooks/pre-delete-remove-mutatingwebhookconfiguration.yaml
+  - charts/kyverno/templates/hooks/pre-delete-remove-validatingwebhookconfiguration.yaml
+  asserts:
+  - hasDocuments:
+      count: 0
+- it: omits the deployment scale permission from the admission controller role
+  template: charts/kyverno/templates/admission-controller/role.yaml
+  asserts:
+  - notContains:
+      path: rules[?(@.apiGroups[0] == "apps")].resources
+      content: deployments/scale

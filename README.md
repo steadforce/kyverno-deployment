@@ -62,18 +62,20 @@ The following resources are added on top of the upstream chart:
 | --- | --- | --- |
 | [`values.yaml`](values.yaml) | All environments | Policy defaults. |
 | [`values-subchart-overrides.yaml`](values-subchart-overrides.yaml) | All environments | Subchart overrides. |
-| [`values-local.yaml`](values-local.yaml) | Local clusters | Single replicas, near-zero resources, audit only. |
+| [`values-local.yaml`](values-local.yaml) | Local clusters | Single replicas, zero requests, verbose logs, audit. |
 | [`values-production.yaml`](values-production.yaml) | Production clusters | Audit-only `disallow-latest-tag`. |
 | [`values-sf-k8s04-dev.yaml`](values-sf-k8s04-dev.yaml) | `sf-k8s04-dev` | Admission controller memory request. |
 
 `values.yaml` sets `policies.disallowLatestTag.validationFailureAction` to `enforce`, and
 `policies.requireRequestsAndLimits.validationFailureAction` to `audit`, which no template currently uses.
-`values-local.yaml` and `values-production.yaml` switch `disallow-latest-tag` to `audit`.
+`values-local.yaml` and `values-production.yaml` switch `disallow-latest-tag` to `audit`. `values-local.yaml` also
+runs one replica per controller, sets zero resource requests, and raises the log verbosity to `3`.
 
 `values-subchart-overrides.yaml` sets, under the top-level `kyverno:` key, the replicas, resources, priority
 class, and additional cluster role permissions of the controllers, the resources of the cleanup jobs, the
-`ServerSideApply=true` ArgoCD sync option on the CRDs, the enabled features (policy exceptions in all namespaces,
-no admission reports), a network policy, and the `bitnamilegacy/kubectl` image for the cleanup hooks. The
+`ServerSideApply=true` ArgoCD sync option on the CRDs, disabled default registry mutation, the enabled features
+(policy exceptions in all namespaces, no admission reports, log verbosity `-1`), a network policy, and the
+`bitnamilegacy/kubectl` image for the cleanup hooks. The
 webhooks cleanup hook is disabled because ArgoCD does not support pre-delete Helm hooks.
 
 > [!NOTE]
@@ -116,15 +118,14 @@ Containerized:
 
 ## Rendering
 
-This renders the chart for a local cluster into `_local/local/`. The `-a` flags declare the APIs that the
-policies and the subchart check for, since no cluster is queried while rendering. For another environment,
+This renders the chart for a local cluster into `_local/local/`. The `-a` flags declare the `kyverno.io/v1` and
+`cert-manager.io/v1` APIs that the policies check for, since no cluster is queried while rendering. For another environment,
 replace `values-local.yaml` with its value file, or drop it for the defaults.
 
 From the workbench:
 
 ```shell
- helm template kyverno . \
-   -a batch/v1/CronJob \
+ helm template \
    -a cert-manager.io/v1 \
    -a kyverno.io/v1 \
    -f values-subchart-overrides.yaml \
@@ -132,7 +133,9 @@ From the workbench:
    --include-crds \
    -n kyverno \
    --output-dir _local/local \
-   --skip-tests
+   --skip-tests \
+   kyverno \
+   .
 ```
 
 Containerized:
@@ -144,8 +147,7 @@ Containerized:
    -u $(id -u) \
    -v "$(pwd):/apps" \
    -w /apps \
-   alpine/helm template kyverno . \
-   -a batch/v1/CronJob \
+   alpine/helm template \
    -a cert-manager.io/v1 \
    -a kyverno.io/v1 \
    -f values-subchart-overrides.yaml \
@@ -153,7 +155,9 @@ Containerized:
    --include-crds \
    -n kyverno \
    --output-dir _local/local \
-   --skip-tests
+   --skip-tests \
+   kyverno \
+   .
 ```
 
 > [!NOTE]
@@ -163,9 +167,27 @@ Containerized:
 ## Testing
 
 The suites in [`tests/`](tests) assert, per controller (admission, background, cleanup, and reports), the
-container resources for local and all other clusters, the additional cluster role permissions, the policy
-exceptions feature, and the logging verbosity and format. They also assert that `disallow-latest-tag` is enforced
-by default and on `sf-k8s04-dev`, and only audited on local and production clusters.
+container resources for local and all other clusters, the replicas and priority class, the additional cluster
+role permissions, the policy exceptions and admission reports features, and the logging verbosity and format.
+They also assert the `sf-k8s04-dev` memory request, the CRD sync option, the disabled default registry mutation,
+the omitted webhooks cleanup hooks, and that `disallow-latest-tag` is enforced by default and on `sf-k8s04-dev`,
+and only audited on local and production clusters.
+
+From the workbench:
+
+```shell
+ helm unittest .
+```
+
+The workbench image does not ship the helm-unittest plugin. The command works because the workbench mounts your
+`$HOME`, so a plugin installed in your host's Helm home is available. Install it once with the following command;
+Helm 4 needs `--verify=false` for this unsigned plugin, as the pipeline does:
+
+```shell
+ helm plugin install --verify=false https://github.com/helm-unittest/helm-unittest.git
+```
+
+Containerized:
 
 ```shell
  docker run \
@@ -178,7 +200,7 @@ by default and on `sf-k8s04-dev`, and only audited on local and production clust
 ```
 
 helm-unittest writes XUnit by default. To get a JUnit report in `test-output.xml`, as the pipeline does, add
-`-t JUnit -o test-output.xml` before the chart path. Inside the workbench, run `helm unittest .` directly.
+`-t JUnit -o test-output.xml` before the chart path.
 
 ### Run GitHub Workflows Locally
 

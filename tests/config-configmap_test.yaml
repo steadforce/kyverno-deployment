@@ -1,0 +1,26 @@
+suite: kyverno config configmap
+release:
+  name: kyverno
+templates:
+- charts/kyverno/templates/config/configmap.yaml
+tests:
+- it: disables default registry mutation
+  values:
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - equal:
+      path: data.enableDefaultRegistryMutation
+      value: "false"
+- it: disables default registry mutation on production clusters
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - equal:
+      path: data.enableDefaultRegistryMutation
+      value: "false"
+- it: matches the configmap snapshot
+  values:
+  - ../values-subchart-overrides.yaml
+  asserts:
+  - matchSnapshot: {}

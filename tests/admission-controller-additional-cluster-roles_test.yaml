@@ -1,37 +1,39 @@
-suite: "test additional cluster roles for kyverno admission controller"
+suite: kyverno admission controller cluster roles per cluster
 release:
   name: kyverno
 templates:
 - charts/kyverno/templates/admission-controller/clusterrole.yaml
 tests:
-- it: admission controller (all cluster types) - core clusterrole does not contain secret resource
-  values: &valuesSubchartOverrides
+- it: omits secrets from the core cluster role on non-local clusters
+  values: &subchartOverrideValues
   - ../values-subchart-overrides.yaml
   asserts:
-  - notExists: &secretRules
-      path: rules[*].resources[?(@ == 'secrets')]
-    documentSelector: &admissionControllerCore
+  - notExists:
+      path: &secretResourcePathExpression rules[*].resources[?(@ == 'secrets')]
+    documentSelector: &admissionControllerCoreSelector
       path: metadata.name
       value: kyverno:admission-controller:core
   - matchSnapshot: {}
-- it: admission controller (local clusters) - core clusterrole does not contain secret resource
+- it: omits secrets from the core cluster role on local clusters
   values:
   - ../values-subchart-overrides.yaml
   - ../values-local.yaml
   asserts:
-  - notExists: *secretRules
-    documentSelector: *admissionControllerCore
+  - notExists:
+      path: *secretResourcePathExpression
+    documentSelector: *admissionControllerCoreSelector
   - matchSnapshot: {}
-- it: admission controller (production clusters) - core clusterrole does not contain secret resource
+- it: omits secrets from the core cluster role on production clusters
   values:
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts:
-  - notExists: *secretRules
-    documentSelector: *admissionControllerCore
+  - notExists:
+      path: *secretResourcePathExpression
+    documentSelector: *admissionControllerCoreSelector
   - matchSnapshot: {}
-- it: admission controller (all cluster types) - additional cluster role contains secret, postgresql and istio sidecar resource
-  values: *valuesSubchartOverrides
+- it: grants read access in the additional cluster role on non-local clusters
+  values: *subchartOverrideValues
   asserts:
   - equal:
       path: rules
@@ -75,8 +77,8 @@ tests:
       path: metadata.name
       value: kyverno:admission-controller:additional
   - matchSnapshot: {}
-- it: check for apiVersion change in ClusterRole for kyverno admission controller
-  values: *valuesSubchartOverrides
+- it: uses the rbac.authorization.k8s.io/v1 api version on non-local clusters
+  values: *subchartOverrideValues
   asserts:
   - containsDocument:
       kind: ClusterRole
