@@ -7,8 +7,7 @@ tests:
 - it: omits the pre-delete cleanup jobs
   templates:
   - charts/kyverno/templates/hooks/pre-delete-scale-to-zero.yaml
-  - charts/kyverno/templates/hooks/pre-delete-remove-mutatingwebhookconfiguration.yaml
-  - charts/kyverno/templates/hooks/pre-delete-remove-validatingwebhookconfiguration.yaml
+  - charts/kyverno/templates/hooks/pre-delete-remove-webhooks.yaml
   asserts:
   - hasDocuments:
       count: 0
