@@ -1,4 +1,9 @@
 kyverno:
+  # All Kyverno images come directly from ghcr.io. The chart default is the gateway reg.kyverno.io (Scarf), a third party that was down (503) when we tested the promotion to 3.8.2.
+  # Not the Harbor proxy on purpose: Harbor runs on the same cluster and its pods are admitted by Kyverno (a restart of Kyverno could not pull its images before Harbor is up).
+  global:
+    image:
+      registry: ghcr.io
   admissionController:
     container:
       resources:
