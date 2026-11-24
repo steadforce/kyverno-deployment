@@ -1,20 +1,43 @@
 suite: kyverno controller images
 release:
   name: kyverno
-templates:
-- charts/kyverno/templates/admission-controller/deployment.yaml
-- charts/kyverno/templates/background-controller/deployment.yaml
-- charts/kyverno/templates/cleanup-controller/deployment.yaml
-- charts/kyverno/templates/reports-controller/deployment.yaml
 tests:
-- it: pulls every controller image directly from ghcr.io and not from the reg.kyverno.io gateway
+- it: pulls the admission controller image directly from ghcr.io and not from the reg.kyverno.io gateway
+  template: charts/kyverno/templates/admission-controller/deployment.yaml
   values:
   - ../values-subchart-overrides.yaml
   - ../values-production.yaml
   asserts:
   - matchRegex:
-      path: spec.template.spec.containers[0].image
-      pattern: "^ghcr\\.io/kyverno/[a-z-]+:v[0-9.]+$"
+      path: spec.template.spec.containers[?(@.name == "kyverno")].image
+      pattern: "^ghcr\\.io/kyverno/kyverno:v[0-9.]+$"
+- it: pulls the background controller image directly from ghcr.io and not from the reg.kyverno.io gateway
+  template: charts/kyverno/templates/background-controller/deployment.yaml
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].image
+      pattern: "^ghcr\\.io/kyverno/background-controller:v[0-9.]+$"
+- it: pulls the cleanup controller image directly from ghcr.io and not from the reg.kyverno.io gateway
+  template: charts/kyverno/templates/cleanup-controller/deployment.yaml
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].image
+      pattern: "^ghcr\\.io/kyverno/cleanup-controller:v[0-9.]+$"
+- it: pulls the reports controller image directly from ghcr.io and not from the reg.kyverno.io gateway
+  template: charts/kyverno/templates/reports-controller/deployment.yaml
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.containers[?(@.name == "controller")].image
+      pattern: "^ghcr\\.io/kyverno/reports-controller:v[0-9.]+$"
 - it: pulls the kyverno-pre init container of the admission controller from ghcr.io too, without it the admission controller does not start
   template: charts/kyverno/templates/admission-controller/deployment.yaml
   values:
