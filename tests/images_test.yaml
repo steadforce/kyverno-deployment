@@ -15,3 +15,12 @@ tests:
   - matchRegex:
       path: spec.template.spec.containers[0].image
       pattern: "^ghcr\\.io/kyverno/[a-z-]+:v[0-9.]+$"
+- it: pulls the kyverno-pre init container of the admission controller from ghcr.io too, without it the admission controller does not start
+  template: charts/kyverno/templates/admission-controller/deployment.yaml
+  values:
+  - ../values-subchart-overrides.yaml
+  - ../values-production.yaml
+  asserts:
+  - matchRegex:
+      path: spec.template.spec.initContainers[?(@.name == "kyverno-pre")].image
+      pattern: "^ghcr\\.io/kyverno/kyvernopre:v[0-9.]+$"
